@@ -11,7 +11,7 @@ export default defineConfig({
       manifest: {
         name: 'Noah Math',
         short_name: 'NoahMath',
-        description: 'Quick-fire multiplication quiz (1×1 to 6×6).',
+        description: 'Quick-fire multiplication quiz with selectable tables.',
         start_url: '/',
         scope: '/',
         display: 'standalone',
