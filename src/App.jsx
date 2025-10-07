@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -8,11 +7,18 @@ const TIMERS = [
   { id: '30s', label: '30 sec', seconds: 30 },
 ]
 
-const ALL_TABLES = Array.from({ length: 10 }, (_, i) => i + 1) // 1..10
+const LEVELS = [
+  { id: 'easy', label: 'Easy', emoji: '🐣', min: 1, max: 3 },
+  { id: 'medium', label: 'Medium', emoji: '📚', min: 3, max: 5 },
+  { id: 'hard', label: 'Hard', emoji: '🔥', min: 5, max: 7 },
+  { id: 'super', label: 'Super Hard', emoji: '⚡', min: 7, max: 9 },
+  { id: 'boss', label: 'BOSS', emoji: '👑', min: 1, max: 10 },
+]
 
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min }
-function makeQuestion(table) {
-  const a = table
+
+function makeQuestion(level) {
+  const a = randInt(level.min, level.max)
   const b = randInt(1, 10)
   const answer = a * b
   const options = new Set([answer])
@@ -26,15 +32,15 @@ function makeQuestion(table) {
 }
 
 export default function NoahMath() {
-  // Defaults: ×5 table and 30s timer
-  const [table, setTable] = useState(5)
+  // Defaults: Easy + 30s
+  const [levelSel, setLevelSel] = useState(LEVELS[0])
   const [timerMode, setTimerMode] = useState(TIMERS[2])
   const [timeLeft, setTimeLeft] = useState(TIMERS[2].seconds)
 
   const [bananas, setBananas] = useState(0)
   const [level, setLevel] = useState(0)
 
-  const [q, setQ] = useState(() => makeQuestion(5))
+  const [q, setQ] = useState(() => makeQuestion(LEVELS[0]))
   const [running, setRunning] = useState(false)
   const [selectedChoice, setSelectedChoice] = useState(null)
   const [showStartHint, setShowStartHint] = useState(true)
@@ -51,21 +57,21 @@ export default function NoahMath() {
         if (t <= 1) {
           clearInterval(intervalRef.current)
           setSelectedChoice(null)
-          setQ(makeQuestion(table))
+          setQ(makeQuestion(levelSel))
           return timerMode.seconds
         }
         return t - 1
       })
     }, 1000)
     return () => intervalRef.current && clearInterval(intervalRef.current)
-  }, [running, timerMode, table])
+  }, [running, timerMode, levelSel])
 
   useEffect(() => { setTimeLeft(timerMode.seconds || 0) }, [timerMode])
 
   const start = () => {
     setRunning(true)
     setShowStartHint(false)
-    setQ(makeQuestion(table))
+    setQ(makeQuestion(levelSel))
     if (timerMode.seconds > 0) setTimeLeft(timerMode.seconds)
   }
   const stop = () => { setRunning(false); if (intervalRef.current) clearInterval(intervalRef.current) }
@@ -91,7 +97,7 @@ export default function NoahMath() {
     // quick transition to next Q
     setTimeout(() => {
       setSelectedChoice(null)
-      setQ(makeQuestion(table))
+      setQ(makeQuestion(levelSel))
       if (timerMode.seconds > 0) setTimeLeft(timerMode.seconds)
     }, 220)
   }
@@ -101,9 +107,15 @@ export default function NoahMath() {
     setBananas(0)
     setLevel(0)
     setSelectedChoice(null)
-    setQ(makeQuestion(table))
+    setQ(makeQuestion(levelSel))
     setShowStartHint(true)
     setTimeLeft(timerMode.seconds || 0)
+  }
+
+  const onLevelChange = (e) => {
+    const lv = LEVELS.find(l => l.id === e.target.value) || LEVELS[0]
+    setLevelSel(lv)
+    setQ(makeQuestion(lv))
   }
 
   return (
@@ -114,24 +126,19 @@ export default function NoahMath() {
             <div className="flex flex-col items-center gap-3 md:flex-row md:justify-between">
               <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">Noah Math</h1>
               <div className="flex flex-wrap items-center gap-2">
-                {/* Quick table switcher ×1..×10 with active highlight */}
-                <div className="flex flex-wrap items-center gap-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400 mr-1">Table</span>
-                  {ALL_TABLES.map(n => (
-                    <button
-                      key={n}
-                      onClick={() => { setTable(n); setQ(makeQuestion(n)) }}
-                      className={[
-                        'rounded-full border px-3 py-1 text-xs font-semibold transition',
-                        table === n
-                          ? 'border-green-600 text-green-700 bg-green-50 ring-2 ring-green-300 dark:text-green-300 dark:bg-green-900/30'
-                          : 'border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                      ].join(' ')}
-                    >
-                      ×{n}
-                    </button>
+                {/* Level dropdown */}
+                <select
+                  value={levelSel.id}
+                  onChange={onLevelChange}
+                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-green-400 dark:border-slate-700 dark:bg-slate-800"
+                  title="Choose difficulty"
+                >
+                  {LEVELS.map((L) => (
+                    <option key={L.id} value={L.id}>
+                      {L.label} {L.emoji} (×{L.min}–×{L.max})
+                    </option>
                   ))}
-                </div>
+                </select>
 
                 {/* Timer select */}
                 <select
@@ -150,10 +157,9 @@ export default function NoahMath() {
                 </button>
               </div>
             </div>
-
             {/* Level indicator */}
             <div className="text-center text-xs text-slate-500 dark:text-slate-400">
-              Level: <span className="font-semibold text-slate-700 dark:text-slate-200">{level}</span>
+              LEVEL: <span className="font-semibold text-slate-700 dark:text-slate-200">{levelSel.label} {levelSel.emoji}</span> · Player Level: <span className="font-semibold">{level}</span>
             </div>
           </div>
         </header>
@@ -195,7 +201,7 @@ export default function NoahMath() {
               })}
             </div>
 
-            {/* Congrats banner (level up at 100 bananas) */}
+            {/* Congrats banner */}
             <AnimatePresence>
               {showCongrats && (
                 <motion.div
@@ -221,7 +227,7 @@ export default function NoahMath() {
           <AnimatePresence>
             {showStartHint && (
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">
-                Tip: Choose a table (×1…×10). Each correct +5 bananas; wrong −5. Hit 100 bananas to level up 🎉
+                Tip: Choose a level from the dropdown. Each correct +5 bananas; wrong −5. Hit 100 bananas to level up 🎉
               </motion.p>
             )}
           </AnimatePresence>
