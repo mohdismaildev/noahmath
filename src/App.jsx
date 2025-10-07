@@ -60,9 +60,7 @@ export default function NoahMath() {
 
   useEffect(() => { setTimeLeft(timerMode.seconds || 0) }, [timerMode])
 
-  const toggleTable = (n) => {
-    setSelectedTables((prev) => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n].sort((a,b)=>a-b))
-  }
+  const toggleTable = (n) => { setSelectedTables((prev) => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n].sort((a,b)=>a-b)) }
   const selectAll = () => setSelectedTables([...ALL_TABLES])
   const selectNone = () => setSelectedTables([])
   const selectUpTo6 = () => setSelectedTables([1,2,3,4,5,6])
@@ -74,7 +72,7 @@ export default function NoahMath() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-green-50 to-white p-4 text-slate-800 dark:from-slate-900 dark:to-slate-950 dark:text-slate-100">
-      <div className="mx-auto flex max-w-5xl flex-col gap-4">
+      <div className="mx-auto flex max-w-4xl flex-col gap-4">
         <header className="rounded-2xl border border-slate-200/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/60">
           <div className="flex flex-col gap-3">
             <div className="flex flex-col items-center gap-3 md:flex-row md:justify-between">
@@ -87,6 +85,7 @@ export default function NoahMath() {
               </div>
             </div>
 
+            {/* Table selection */}
             <div className="flex flex-col gap-2">
               <p className="text-sm text-slate-500 dark:text-slate-400">Choose multiplication tables to practice:</p>
               <div className="flex flex-wrap gap-2">
@@ -112,69 +111,56 @@ export default function NoahMath() {
           </div>
         </header>
 
-        <section className="grid gap-3 md:grid-cols-3">
-          <div className="order-2 flex flex-col gap-3 md:order-1">
-            <StatCard label="Bananas" value={bananas} />
-            <StatCard label="Timer" value={timerMode.label} />
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-              <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Tables</p>
-              <p className="text-sm">{selectedTables.join(', ')}</p>
-            </div>
-          </div>
-
-          <div className="order-1 md:order-2 md:col-span-2">
-            <div className="mx-auto flex max-w-[680px] flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-              {/* QUESTION + TIMER ROW */}
-              <div className="flex w-full items-center justify-between">
-                <div className="text-center flex-1">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Solve:</p>
-                  <div className="text-5xl font-black tracking-tight">{q.a} × {q.b}</div>
+        {/* Clean single-column quiz card */}
+        <section className="">
+          <div className="mx-auto flex max-w-[680px] flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            {/* QUESTION + BANANAS (left) + TIMER (right) */}
+            <div className="flex w-full items-center justify-between">
+              {/* Bananas badge on the left */}
+              <div className="mr-3 shrink-0 rounded-2xl bg-yellow-400/90 px-4 py-2 text-center text-lg font-extrabold text-yellow-900">
+                🍌 {bananas}
+              </div>
+              {/* Question center */}
+              <div className="text-center flex-1">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Solve:</p>
+                <div className="text-5xl font-black tracking-tight">{q.a} × {q.b}</div>
+              </div>
+              {/* Timer badge on the right */}
+              {timerMode.seconds > 0 && (
+                <div className={`ml-3 shrink-0 rounded-2xl px-4 py-2 text-center text-lg font-extrabold text-white ${timeLeft <= 5 ? 'bg-red-600 animate-pulse' : 'bg-green-600'}`}>
+                  {timeLeft}s
                 </div>
-                {timerMode.seconds > 0 && (
-                  <div className={`ml-3 shrink-0 rounded-2xl px-4 py-2 text-center text-lg font-extrabold text-white ${timeLeft <= 5 ? 'bg-red-600 animate-pulse' : 'bg-green-600'}`}>
-                    {timeLeft}s
-                  </div>
-                )}
-              </div>
-
-              <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
-                {q.choices.map((c) => (
-                  <button key={c} onClick={() => answer(c)} className="rounded-2xl bg-green-600 px-4 py-3 text-lg font-bold text-white shadow transition hover:bg-green-500 active:scale-95 focus:outline-none focus:ring-2 focus:ring-green-300">
-                    {c}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 pt-2">
-                {!running ? (
-                  <button onClick={start} className="rounded-2xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-300">Start</button>
-                ) : (
-                  <button onClick={stop} className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow focus:outline-none focus:ring-2 focus:ring-green-300 active:translate-y-0 dark:border-slate-700 dark:bg-slate-800">Pause</button>
-                )}
-              </div>
-            </div>
-            <AnimatePresence>
-              {showStartHint && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">
-                  Tip: Tap the tables you want (×1…×10). Each correct +5 bananas; wrong −5. Use 15s or 30s timer for speed rounds.
-                </motion.p>
               )}
-            </AnimatePresence>
+            </div>
+
+            <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
+              {q.choices.map((c) => (
+                <button key={c} onClick={() => answer(c)} className="rounded-2xl bg-green-600 px-4 py-3 text-lg font-bold text-white shadow transition hover:bg-green-500 active:scale-95 focus:outline-none focus:ring-2 focus:ring-green-300">
+                  {c}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              {!running ? (
+                <button onClick={start} className="rounded-2xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-300">Start</button>
+              ) : (
+                <button onClick={stop} className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow focus:outline-none focus:ring-2 focus:ring-green-300 active:translate-y-0 dark:border-slate-700 dark:bg-slate-800">Pause</button>
+              )}
+            </div>
           </div>
+          <AnimatePresence>
+            {showStartHint && (
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">
+                Tip: Tap the tables you want (×1…×10). Each correct +5 bananas; wrong −5. Use 15s or 30s timer for speed rounds.
+              </motion.p>
+            )}
+          </AnimatePresence>
         </section>
 
         <footer className="mx-auto max-w-3xl text-center text-xs text-slate-500 dark:text-slate-400">
           <p>Made with Love, from Daddy & Mommy ❤️</p>
         </footer>
       </div>
-    </div>
-  )
-}
-
-function StatCard({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
-      <p className="text-2xl font-bold">{value}</p>
     </div>
   )
 }
