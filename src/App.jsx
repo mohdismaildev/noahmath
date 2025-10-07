@@ -33,6 +33,7 @@ export default function NoahMath() {
   const [bananas, setBananas] = useState(0)
   const [q, setQ] = useState(() => makeQuestion([1,2,3,4,5,6]))
   const [running, setRunning] = useState(false)
+  const [selectedChoice, setSelectedChoice] = useState(null) // highlight blue
   const [showStartHint, setShowStartHint] = useState(true)
   const intervalRef = useRef(null)
 
@@ -49,6 +50,7 @@ export default function NoahMath() {
       setTimeLeft((t) => {
         if (t <= 1) {
           clearInterval(intervalRef.current)
+          setSelectedChoice(null)
           setQ(makeQuestion(selectedTables))
           return timerMode.seconds
         }
@@ -67,8 +69,21 @@ export default function NoahMath() {
 
   const start = () => { setRunning(true); setShowStartHint(false); setQ(makeQuestion(selectedTables)); if (timerMode.seconds > 0) setTimeLeft(timerMode.seconds) }
   const stop = () => { setRunning(false); if (intervalRef.current) clearInterval(intervalRef.current) }
-  const answer = (val) => { if (!running) start(); const correct = val === q.answer; setBananas((b) => Math.max(0, b + (correct ? 5 : -5))); setQ(makeQuestion(selectedTables)); if (timerMode.seconds > 0) setTimeLeft(timerMode.seconds) }
-  const resetAll = () => { stop(); setBananas(0); setQ(makeQuestion(selectedTables)); setShowStartHint(true); setTimeLeft(timerMode.seconds || 0) }
+
+  const answer = (val) => {
+    if (!running) start()
+    setSelectedChoice(val) // turn selected blue
+    const correct = val === q.answer
+    setBananas((b) => Math.max(0, b + (correct ? 5 : -5)))
+    // brief visual feedback then next question
+    setTimeout(() => {
+      setSelectedChoice(null)
+      setQ(makeQuestion(selectedTables))
+      if (timerMode.seconds > 0) setTimeLeft(timerMode.seconds)
+    }, 220)
+  }
+
+  const resetAll = () => { stop(); setBananas(0); setSelectedChoice(null); setQ(makeQuestion(selectedTables)); setShowStartHint(true); setTimeLeft(timerMode.seconds || 0) }
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-green-50 to-white p-4 text-slate-800 dark:from-slate-900 dark:to-slate-950 dark:text-slate-100">
@@ -114,10 +129,10 @@ export default function NoahMath() {
         {/* Clean single-column quiz card */}
         <section className="">
           <div className="mx-auto flex max-w-[680px] flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            {/* QUESTION + BANANAS (left) + TIMER (right) */}
+            {/* BANANAS (left) - QUESTION (center) - TIMER (right) */}
             <div className="flex w-full items-center justify-between">
-              {/* Bananas badge on the left */}
-              <div className="mr-3 shrink-0 rounded-2xl bg-yellow-400/90 px-4 py-2 text-center text-lg font-extrabold text-yellow-900">
+              {/* Bananas badge on white */}
+              <div className="mr-3 shrink-0 rounded-2xl bg-white px-4 py-2 text-center text-lg font-extrabold text-yellow-600 border border-yellow-300">
                 🍌 {bananas}
               </div>
               {/* Question center */}
@@ -134,11 +149,22 @@ export default function NoahMath() {
             </div>
 
             <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
-              {q.choices.map((c) => (
-                <button key={c} onClick={() => answer(c)} className="rounded-2xl bg-green-600 px-4 py-3 text-lg font-bold text-white shadow transition hover:bg-green-500 active:scale-95 focus:outline-none focus:ring-2 focus:ring-green-300">
-                  {c}
-                </button>
-              ))}
+              {q.choices.map((c) => {
+                const isSelected = selectedChoice === c
+                return (
+                  <button
+                    key={c}
+                    onClick={() => answer(c)}
+                    className={`rounded-2xl px-4 py-3 text-lg font-bold text-white shadow transition active:scale-95 focus:outline-none focus:ring-2 ${
+                      isSelected
+                        ? 'bg-blue-600 focus:ring-blue-300'
+                        : 'bg-green-600 hover:bg-green-500 focus:ring-green-300'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                )
+              })}
             </div>
             <div className="flex items-center gap-2 pt-2">
               {!running ? (
