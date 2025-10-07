@@ -6,9 +6,7 @@ import { registerSW } from 'virtual:pwa-register'
 
 registerSW({
   immediate: true,
-  onOfflineReady() {
-    console.log('PWA offline ready')
-  }
+  onOfflineReady() { console.log('PWA offline ready') }
 })
 
 ReactDOM.createRoot(document.getElementById('root')).render(
